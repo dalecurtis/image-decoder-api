@@ -94,7 +94,7 @@ Output:
   imageDecoder.frameCount = 48
   imageDecoder.mimeType = "image/gif"
 ```
-[![Example](test-gif.gif)(test-gif.gif)
+![Example](test-gif.gif)
 
 
 # Open Questions / Notes / Links
