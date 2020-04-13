@@ -62,32 +62,32 @@ interface ImageDecoder {
 # Example
 
 ```Javascript
-  // This example renders an animated image to a canvas.
+// This example renders an animated image to a canvas.
 
-  let canvas = document.createElement('canvas');
-  let canvasContext = canvas.getContext('2d');
+let canvas = document.createElement('canvas');
+let canvasContext = canvas.getContext('2d');
 
-  let data = /* ArrayBuffer or ArrayBufferView of image data bytes */;
-  let imageDecoder = new ImageDecoder({imageData: data});
-  console.log('imageDecoder.frameCount = ' + imageDecoder.frameCount);
-  console.log('imageDecoder.mimeType = ' + imageDecoder.mimeType);
+let data = /* ArrayBuffer or ArrayBufferView of image data bytes */;
+let imageDecoder = new ImageDecoder({imageData: data});
+console.log('imageDecoder.frameCount = ' + imageDecoder.frameCount);
+console.log('imageDecoder.mimeType = ' + imageDecoder.mimeType);
 
-  let imageIndex = 0;
-  function renderImage(imageFrame) {
-    canvasContext.drawImage(imageFrame.image, 0, 0);
+let imageIndex = 0;
+function renderImage(imageFrame) {
+  canvasContext.drawImage(imageFrame.image, 0, 0);
 
-    if (imageDecoder.frameCount == 1)
-      return;
+  if (imageDecoder.frameCount == 1)
+    return;
 
-    if (imageIndex + 1 >= imageDecoder.frameCount)
-      imageIndex = 0;
+  if (imageIndex + 1 >= imageDecoder.frameCount)
+    imageIndex = 0;
 
-    // Decode the next frame ahead of display so it's ready in time.
-    imageDecoder.decode(++imageIndex).then(nextImageFrame => setTimeout(
-        _ => { renderImage(nextImageFrame); }, imageFrame.duration / 1000.0));
-  }
+  // Decode the next frame ahead of display so it's ready in time.
+  imageDecoder.decode(++imageIndex).then(nextImageFrame => setTimeout(
+      _ => { renderImage(nextImageFrame); }, imageFrame.duration / 1000.0));
+}
 
-  imageDecoder.decode(imageIndex).then(renderImage);
+imageDecoder.decode(imageIndex).then(renderImage);
 ```
 
 Output:
