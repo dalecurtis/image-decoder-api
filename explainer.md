@@ -1,13 +1,11 @@
 # ImageDecoder Explainer
 
 # Introduction
-Today [`<img>`](https://developer.mozilla.org/en-US/docs/Web/API/HTMLImageElement) elements don't have a way to provide access to frames beyond the first. They also have no control over which frame is displayed in an animation.
-
-As we look to provide audio and video decoders through [WebCodecs](https://github.com/WICG/web-codecs/blob/master/explainer.md)it makes sense to consider similar interfaces for images as well.
+Today [`<img>`](https://developer.mozilla.org/en-US/docs/Web/API/HTMLImageElement) elements don't have a way to provide access to frames beyond the first. They also have no control over which frame is displayed in an animation. As we look to provide audio and video codecs through [WebCodecs](https://github.com/WICG/web-codecs/blob/master/explainer.md) we should consider similar interfaces for images as well.
 
 We propose a new ImageDecoder API to provide WebAuthors access to an [ImageBitmap](https://developer.mozilla.org/en-US/docs/Web/API/ImageBitmap) of each frame given a arbitrary byte array.
 
-If we choose to pursue this API, it likely makes sense to provide an ImageEncoder interface as well, but that topic is left for a later discussion.
+If we choose to pursue this API, it makes sense to provide an ImageEncoder interface as well, but that topic is left for a later discussion.
 
 
 # Use cases
