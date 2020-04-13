@@ -31,6 +31,13 @@ dictionary ImageFrame {
 dictionary ImageDecoderInit {
   BufferSource imageData;
 
+  // Optional mime type of |imageData|. If unspecified we will attempt to sniff
+  // the mime type. If specified, |imageData| must be of |type| or a decoding
+  // error will occur.
+  //
+  // https://mimesniff.spec.whatwg.org/#rules-for-sniffing-images-specifically
+  USVString? type;
+
   // TODO: Should all options below be collapsed into ImageBitmapOptions? Or do
   // we want to allow ImageBitmapOptions to be specified per decode() call? A
   // caller can always apply their own options later via createImageBitmap().
