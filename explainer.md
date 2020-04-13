@@ -75,6 +75,10 @@ interface ImageDecoder {
   let imageIndex = 0;
   function renderImage(imageFrame) {
     canvasContext.drawImage(imageFrame.image, 0, 0);
+
+    if (imageDecoder.frameCount == 1)
+      return;
+
     if (imageIndex + 1 >= imageDecoder.frameCount)
       imageIndex = 0;
 
