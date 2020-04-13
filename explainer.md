@@ -31,6 +31,10 @@ dictionary ImageFrame {
 dictionary ImageDecoderInit {
   BufferSource imageData;
 
+  // TODO: Should all options below be collapsed into ImageBitmapOptions? Or do
+  // we want to allow ImageBitmapOptions to be specified per decode() call? A
+  // caller can always apply their own options later via createImageBitmap().
+
   // Optional parameter indicating that color space information for the decoded
   // image should be ignored.
   boolean? ignoreColorSpace;
@@ -43,16 +47,19 @@ dictionary ImageDecoderInit {
 };
 
 interface ImageDecoder {
-  [CallWith=ScriptState, RaisesException] constructor(ImageDecoderInit init);
+  constructor(ImageDecoderInit init);
 
   // Decodes the frame at the given index.
   Promise<ImageFrame> decode(unsigned long frameIndex);
+
+  // TODO: SetData() or AppendData() method for streaming use cases? Would also
+  // require a constructor argument to indicate that more data is coming.
 
   // The number of frames in the image.
   readonly attribute unsigned long frameCount;
 
   // The detected mime type for the decoded image.
-  readonly attribute DOMString mimeType;
+  readonly attribute USVString type;
 
   // The image's preferred repetition count.
   readonly attribute unsigned long repetitionCount;
@@ -70,7 +77,7 @@ let canvasContext = canvas.getContext('2d');
 let data = /* ArrayBuffer or ArrayBufferView of image data bytes */;
 let imageDecoder = new ImageDecoder({imageData: data});
 console.log('imageDecoder.frameCount = ' + imageDecoder.frameCount);
-console.log('imageDecoder.mimeType = ' + imageDecoder.mimeType);
+console.log('imageDecoder.type = ' + imageDecoder.type);
 
 let imageIndex = 0;
 function renderImage(imageFrame) {
