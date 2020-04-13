@@ -92,8 +92,8 @@ imageDecoder.decode(imageIndex).then(renderImage);
 
 Output:
 ```Text
-  imageDecoder.frameCount = 20
-  imageDecoder.mimeType = "image/gif"
+imageDecoder.frameCount = 20
+imageDecoder.mimeType = "image/gif"
 ```
 ![Example](test-gif.gif)
 
