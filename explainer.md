@@ -83,7 +83,7 @@ interface ImageDecoder {
 
     // Decode the next frame ahead of display so it's ready in time.
     imageDecoder.decode(++imageIndex).then(nextImageFrame => setTimeout(
-      _ => { renderImage(nextImageFrame); }, imageData.duration / 1000.0));
+        _ => { renderImage(nextImageFrame); }, imageFrame.duration / 1000.0));
   }
 
   imageDecoder.decode(imageIndex).then(renderImage);
@@ -91,7 +91,7 @@ interface ImageDecoder {
 
 Output:
 ```Text
-  imageDecoder.frameCount = 48
+  imageDecoder.frameCount = 20
   imageDecoder.mimeType = "image/gif"
 ```
 ![Example](test-gif.gif)
