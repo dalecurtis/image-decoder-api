@@ -1,11 +1,9 @@
 # ImageDecoder Explainer
 
 # Introduction
-Today [`<img>`](https://developer.mozilla.org/en-US/docs/Web/API/HTMLImageElement) elements don't have a way to provide access to frames beyond the first. They also have no control over which frame is displayed in an animation. As we look to provide audio and video codecs through [WebCodecs](https://github.com/WICG/web-codecs/blob/master/explainer.md) we should consider similar interfaces for images as well.
+Today [`<img>`](https://developer.mozilla.org/en-US/docs/Web/API/HTMLImageElement) elements don't provide access to any frames beyond the first. They also provide no control over which frame is displayed in an animation. As we look to provide audio and video codecs through [WebCodecs](https://github.com/WICG/web-codecs/blob/master/explainer.md) we should consider similar interfaces for images as well.
 
-We propose a new ImageDecoder API to provide web authors access to an [ImageBitmap](https://developer.mozilla.org/en-US/docs/Web/API/ImageBitmap) of each frame given a arbitrary byte array. The returned ImageBitmap can be used for drawing to canvas or WebGL. Since the API is not bound to the DOM it may also be used in workers.
-
-If we choose to pursue this API, it makes sense to provide an ImageEncoder interface as well, but that topic is left for a later discussion.
+We propose a new ImageDecoder API to provide web authors access to an [ImageBitmap](https://developer.mozilla.org/en-US/docs/Web/API/ImageBitmap) of each frame given an arbitrary byte array as input. The returned ImageBitmaps can be used for drawing to canvas or WebGL (as well as any other future ImageBitmap use cases). Since the API is not bound to the DOM it may also be used in workers.
 
 
 # Use cases
@@ -97,8 +95,9 @@ Output:
 
 
 # Open Questions / Notes / Links
-* Should this be a new API or just hang off of the ImageElement?
+* Should this be a new API or just hang off of the ImageElement? That does bind it to the DOM though.
 * Is there more EXIF information that we'd want to expose?
 * Should color correction and format conversion happen automatically? Optionally? [ImageBitmapOptions](https://developer.mozilla.org/en-US/docs/Web/API/WindowOrWorkerGlobalScope/createImageBitmap#Syntax) offers one solution.
+* If we choose to pursue this API, it makes sense to provide an ImageEncoder interface as well, but that topic is left for a later discussion.
 * [Link to GitHub repository.](https://github.com/dalecurtis/image-decoder-api/blob/master/explainer.md)
 * [Link to Chromium Prototype.](https://chromium-review.googlesource.com/c/chromium/src/+/2145133)
