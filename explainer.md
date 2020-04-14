@@ -61,6 +61,10 @@ interface ImageDecoder {
 
   // TODO: SetData() or AppendData() method for streaming use cases? Would also
   // require a constructor argument to indicate that more data is coming.
+  //
+  // Another solution would be to have ImageDecoderInit take a ReadableStream as
+  // a parameter. That would implicitly signal that more data is coming until
+  // the stream is complete.
 
   // The number of frames in the image.
   readonly attribute unsigned long frameCount;
