@@ -22,7 +22,7 @@ We propose a new ImageDecoder API to provide web authors access to an [ImageBitm
 
 ## Non-Goals
 * Defining how authors may provide their own decoders for formats that are unsupported by the user agent.
- * E.g., &lt;img src="cats.pcx"&gt;.
+  * E.g., &lt;img src="cats.pcx"&gt;.
 * Defining an ImageEncoder API; that's left for another explainer.
 
 ## ImageDecoder API
@@ -128,7 +128,7 @@ imageDecoder.repetitionCount = 0
 ### Providing image decoders through the VideoDecoder API.
 The VideoDecoder API being designed for WebCodecs is intended for transforming demuxed encoded data chunks into decoded frames. Which is problematic for image formats since generally their containers and encoded data are tightly coupled. E.g., you don't generally have a gif demuxer and a gif decoder, just a decoder.
 
-If we allow VideoDecoder users to enqueue raw image blobs we'll have to output all contained frames at once. Without external knowledge of frame locations within the blob users will have to decode batches of unknown size or decode everything at once. I.e., there is no piece-wise decoding of an arbitrarily long image sequence and users need to cache all decoded outputs. This feels bad from a utility and resource usage perspective.
+If we allow VideoDecoder users to enqueue raw image blobs we'll have to output all contained frames at once. Without external knowledge of frame locations within the blob, users will have to decode batches of unknown size or decode everything at once. I.e., there is no piece-wise decoding of an arbitrarily long image sequence and users need to cache all decoded outputs. This feels bad from a utility and resource usage perspective.
 
 The current API allows users to provide as much or as little data as they want. Images are not decoded until needed. Users don't need to cache their decoded output since they have random access to arbitrary images.
 
