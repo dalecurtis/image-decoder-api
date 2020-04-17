@@ -7,6 +7,7 @@
 ## Participate:
 
 - [Issue Tracker](https://github.com/dalecurtis/image-decoder-api/issues)
+- [Prototype](https://chromium-review.googlesource.com/c/chromium/src/+/2145133)
 - TODO: Link to discourse here.
 
 ## Introduction
@@ -20,14 +21,17 @@ We propose a new ImageDecoder API to provide web authors access to an [ImageBitm
 * Usage of image decoding in out of DOM scenarios (offscreen worker, etc).
 
 ## Non-Goals
-* Defining how authors may provide their own decoders for formats that are unsupported by the user agent. E.g., &lt;img src="cats.pcx"&gt;.
+* Defining how authors may provide their own decoders for formats that are unsupported by the user agent.
+ * E.g., &lt;img src="cats.pcx"&gt;.
+* Defining an ImageEncoder API; that's left for another explainer.
 
 ## ImageDecoder API
 
-# Example 1: Animated GIF Renderer
+### Example 1: Animated GIF Renderer
 
 ```Javascript
 // This example renders an animated image to a canvas via ReadableStream.
+
 let canvas = document.createElement('canvas');
 let canvasContext = canvas.getContext('2d');
 let imageIndex = 0;
@@ -60,12 +64,12 @@ Output:
 ```Text
 imageDecoder.frameCount = 20
 imageDecoder.type = "image/gif"
-imageDecoder.repetitionCount = 1
+imageDecoder.repetitionCount = 0
 ```
 ![Example](test-gif.gif)
 
 
-# Example 2: Inverted MJPEG Renderer
+### Example 2: Inverted MJPEG Renderer
 ```Javascript
 // This example renders a multipart/x-mixed-replace MJPEG stream to canvas.
 
@@ -77,6 +81,9 @@ function decodeImage(imageArrayBufferChunk) {
   // ImageDecoder instance for each frame.
   let imageDecoder = new ImageDecoder(
       {data: imageArrayBufferChunk, options: {imageOrientation: "flipY"}});
+  console.log('imageDecoder.frameCount = ' + imageDecoder.frameCount);
+  console.log('imageDecoder.type = ' + imageDecoder.type);
+  console.log('imageDecoder.repetitionCount = ' + imageDecoder.repetitionCount);
   imageDecoder.decode(imageIndex).then(
       imageFrame => canvasContext.drawImage(imageFrame.image, 0, 0));
 }
@@ -102,6 +109,12 @@ fetch("https://mjpeg_server/mjpeg_stream").then(response => {
 ```
 
 Output:
+```Text
+imageDecoder.frameCount = 1
+imageDecoder.type = "image/jpeg"
+imageDecoder.repetitionCount = 0
+...
+```
 ![Example](flipped-gif.gif)
 
 ## Open Questions / Notes / Links
@@ -109,21 +122,19 @@ Output:
 * Using a ReadableStream may over time accumulate enough data to cause OOM.
 * Should we allow mime sniffing at all? It's [discouraged](https://github.com/dalecurtis/image-decoder-api/issues/1) these days, but &lt;img&gt; has historically depended on it.
 * Is there more EXIF information that we'd want to expose?
-* If we choose to pursue this API, it makes sense to provide an ImageEncoder interface as well, but that topic is left for a later discussion.
-* [Link to GitHub repository.](https://github.com/dalecurtis/image-decoder-api/blob/master/explainer.md)
-* [Link to Chromium Prototype.](https://chromium-review.googlesource.com/c/chromium/src/+/2145133)
 
 ## Considered alternatives
 
 ### Providing image decoders through the VideoDecoder API.
-The VideoDecoder API being designed for WebCodecs is intended for transforming demuxed encoded data chunks into decoded frames. Which is problematic for image formats since generally their containers and encoded data are tightly coupled. E.g., you don't generally have a "gif demuxer" and a "gif decoder", just a decoder.
+The VideoDecoder API being designed for WebCodecs is intended for transforming demuxed encoded data chunks into decoded frames. Which is problematic for image formats since generally their containers and encoded data are tightly coupled. E.g., you don't generally have a gif demuxer and a gif decoder, just a decoder.
 
-We could allow VideoDecoder users to enqueue giant blobs of encoded frames and output them all at once; but without external knowledge of frame locations within the blob users will have to decode batches of unknown size or decode everything at once. I.e., there is no piece-wise decoding of an arbitrarily long image sequence. This feels bad from a utility and resource usage perspective.
+If we allow VideoDecoder users to enqueue raw image blobs we'll have to output all contained frames at once. Without external knowledge of frame locations within the blob users will have to decode batches of unknown size or decode everything at once. I.e., there is no piece-wise decoding of an arbitrarily long image sequence and users need to cache all decoded outputs. This feels bad from a utility and resource usage perspective.
 
-The current API allows users to provide as much data as they want. Images are not decoded until needed. Users don't need to cache their decoded output, they have  random access to arbitrary images.
+The current API allows users to provide as much or as little data as they want. Images are not decoded until needed. Users don't need to cache their decoded output since they have random access to arbitrary images.
 
 Other minor cumbersome details:
 * Image containers may define image specific fields like repetition count.
+* Image containers typically have complicated ICC profiles which need application.
 
 ### Hang the API off Image/Picture elements
 This is precluded due to our goal of having the API work out of DOM.
