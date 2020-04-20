@@ -34,6 +34,7 @@ We propose a new ImageDecoder API to provide web authors access to an [ImageBitm
 
 let canvas = document.createElement('canvas');
 let canvasContext = canvas.getContext('2d');
+let imageDecoder = null;
 let imageIndex = 0;
 
 function renderImage(imageFrame) {
@@ -50,7 +51,7 @@ function renderImage(imageFrame) {
 }
 
 function decodeImage(imageByteStream) {
-  let imageDecoder = new ImageDecoder({data: imageByteStream, options: {}});
+  imageDecoder = new ImageDecoder({data: imageByteStream, options: {}});
   console.log('imageDecoder.frameCount = ' + imageDecoder.frameCount);
   console.log('imageDecoder.type = ' + imageDecoder.type);
   console.log('imageDecoder.repetitionCount = ' + imageDecoder.repetitionCount);
