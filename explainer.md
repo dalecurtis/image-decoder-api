@@ -123,6 +123,8 @@ imageDecoder.repetitionCount = 0
 * Using a ReadableStream may over time accumulate enough data to cause OOM.
 * Should we allow mime sniffing at all? It's [discouraged](https://github.com/dalecurtis/image-decoder-api/issues/1) these days, but &lt;img&gt; has historically depended on it.
 * Is there more EXIF information that we'd want to expose?
+* Should we allow decode() to take a "completeFramesOnly" flag which defaults to true?
+  * This would allow partial decodes to be returned for more savvy users.
 
 ## Considered alternatives
 
