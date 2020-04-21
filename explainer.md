@@ -125,6 +125,7 @@ imageDecoder.repetitionCount = 0
 * Is there more EXIF information that we'd want to expose?
 * Should we allow decode() to take a "completeFramesOnly" flag which defaults to true?
   * This would allow partial decodes to be returned for more savvy users.
+* Should we take a fetch() [Request](https://developer.mozilla.org/en-US/docs/Web/API/Request) object as input so that the API can allow display with tainting of image data that would be blocked by CORS?
 
 ## Considered alternatives
 
