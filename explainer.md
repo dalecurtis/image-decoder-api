@@ -146,8 +146,8 @@ This is precluded due to our goal of having the API work out of DOM.
 ## Stakeholder Feedback / Opposition
 
 - Chrome : Positive
-- Firefox: Positive (unofficially)
 - Developers : Positive
+- Firefox : Positive (unofficially)
 
 ## Proposed IDL
 
