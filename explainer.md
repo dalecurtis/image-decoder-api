@@ -8,7 +8,7 @@
 
 - [Issue Tracker](https://github.com/dalecurtis/image-decoder-api/issues)
 - [Prototype](https://chromium-review.googlesource.com/c/chromium/src/+/2145133)
-- TODO: Link to discourse here.
+- [Discourse](https://discourse.wicg.io/t/proposal-imagedecoder-api-extension-for-webcodecs/4418)
 
 ## Introduction
 Today [`<img>`](https://developer.mozilla.org/en-US/docs/Web/API/HTMLImageElement) elements don't provide access to any frames beyond the first. They also provide no control over which frame is displayed in an animation. As we look to provide audio and video codecs through [WebCodecs](https://github.com/WICG/web-codecs/blob/master/explainer.md) we should consider similar interfaces for images as well.
@@ -147,7 +147,8 @@ This is precluded due to our goal of having the API work out of DOM.
 
 - Chrome : Positive
 - Developers : Positive
-- Other user agents : No signals
+- Other user agents :
+  - Firefox: Unofficially positive.
 
 ## Proposed IDL
 
