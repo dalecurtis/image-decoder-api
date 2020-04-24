@@ -165,9 +165,9 @@ dictionary ImageFrame {
   // TODO: Color space information?
 };
 
-typedef (BufferSource or ReadableStream) ImageBufferSource;
+typedef (ArrayBuffer or ArrayBufferView or ReadableStream) ImageBufferSource;
 dictionary ImageDecoderInit {
-  ImageBufferSource data;
+  required ImageBufferSource data;
 
   // See https://html.spec.whatwg.org/multipage/imagebitmap-and-animations.html#imagebitmapoptions
   ImageBitmapOptions options;
@@ -183,12 +183,22 @@ interface ImageDecoder {
   Promise<ImageFrame> decode(unsigned long frameIndex);
 
   // The number of frames in the image.
+  //
+  // When decoding a ReadableStream the value will be 0 until enough data to
+  // decode the frame count has been received. If the format has no fixed count,
+  // the value will increase as frames are received by the decoder.
   readonly attribute unsigned long frameCount;
 
   // The detected mime type for the decoded image.
+  //
+  // When decoding a ReadableStream the value will be an empty string until
+  // enough data to detect the mime type has been received.
   readonly attribute USVString type;
 
   // The image's preferred repetition count.
+  //
+  // When decoding a ReadableStream the value will be 0 until enough data to
+  // decode the repetition count has been received.
   readonly attribute unsigned long repetitionCount;
 };
 ```
