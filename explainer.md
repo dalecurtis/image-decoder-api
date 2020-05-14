@@ -156,6 +156,9 @@ dictionary ImageFrame {
   // Actual decoded image; includes resolution information.
   required ImageBitmap image;
 
+  // Indicates if the decoded image is actually complete.
+  required boolean complete;
+
   // Expected on screen duration for the image in microseconds.
   required unsigned long long duration;
 
@@ -180,7 +183,12 @@ interface ImageDecoder {
   // method will wait to resolve the promise until the given |frameIndex| is
   // available or reject the promise if we receive all data or fail before
   // |frameIndex| is available.
-  Promise<ImageFrame> decode(unsigned long frameIndex);
+  //
+  // When |completeFramesOnly| is set to false, partial progressive frames will
+  // be returned. When in this mode, decode() calls will resolve only once per
+  // new partial image at |frameIndex| until the frame is complete.
+  Promise<ImageFrame> decode(optional unsigned long frameIndex = 0,
+                             optional boolean completeFramesOnly = true);
 
   // The number of frames in the image.
   //
@@ -200,5 +208,8 @@ interface ImageDecoder {
   // When decoding a ReadableStream the value will be 0 until enough data to
   // decode the repetition count has been received.
   readonly attribute unsigned long repetitionCount;
+
+  // True if all available frames have been received by the decoder.
+  readonly attribute boolean complete;
 };
 ```
