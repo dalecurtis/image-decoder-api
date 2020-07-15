@@ -23,7 +23,7 @@ We propose a new ImageDecoder API to provide web authors access to an [ImageBitm
 ## Non-Goals
 * Defining how authors may provide their own decoders for formats that are unsupported by the user agent.
   * E.g., &lt;img src="cats.pcx"&gt;.
-* Defining an ImageEncoder API; that's left for another explainer.
+* Defining an ImageEncoder API; that's left for another explainer and is already provided somewhat by the [Canvas.toBlob() API](https://developer.mozilla.org/en-US/docs/Web/API/HTMLCanvasElement/toBlob).
 
 ## ImageDecoder API
 
@@ -50,11 +50,26 @@ function renderImage(imageFrame) {
       _ => { renderImage(nextImageFrame); }, imageFrame.duration / 1000.0));
 }
 
-function decodeImage(imageByteStream) {
-  imageDecoder = new ImageDecoder({data: imageByteStream, options: {}});
-  console.log('imageDecoder.frameCount = ' + imageDecoder.frameCount);
+function logMetadata(imageDecoder) {
+  if (imageDecoder.frameCount == 1) {
+    console.log('Still image:');
+  else
+    console.log('Animated image:');
   console.log('imageDecoder.type = ' + imageDecoder.type);
+  console.log('imageDecoder.complete = ' + imageDecoder.complete);
+  console.log('imageDecoder.frameCount = ' + imageDecoder.frameCount);
   console.log('imageDecoder.repetitionCount = ' + imageDecoder.repetitionCount);
+  console.log('imageDecoder.tracks.length = ' + imageDecoder.tracks.length);
+  for (var i = 0; i < imageDecoder.tracks.length; ++i) {
+    console.log(`imageDecoder.tracks[${i}] = ` +
+        JSON.stringify(imageDecoder.tracks[i]));
+  }
+}
+
+function decodeImage(imageByteStream) {
+  imageDecoder = new ImageDecoder(
+      {data: imageByteStream, type: "image/gif", options: {}});
+  logMetadata(imageDecoder);
   imageDecoder.decode(imageIndex).then(renderImage);
 }
 
@@ -63,9 +78,13 @@ fetch("animated.gif").then(response => decodeImage(response.body));
 
 Output:
 ```Text
-imageDecoder.frameCount = 20
+Animated image:
 imageDecoder.type = "image/gif"
+imageDecoder.complete = true
+imageDecoder.frameCount = 20
 imageDecoder.repetitionCount = 0
+imageDecoder.tracks.length = 1;
+imageDecoder.tracks[0] = {"animated":true,"id":0}
 ```
 ![Example](test-gif.gif)
 
@@ -80,11 +99,12 @@ let canvasContext = canvas.getContext('2d');
 function decodeImage(imageArrayBufferChunk) {
   // JPEG decoders don't have the concept of multiple frames, so we need a new
   // ImageDecoder instance for each frame.
-  let imageDecoder = new ImageDecoder(
-      {data: imageArrayBufferChunk, options: {imageOrientation: "flipY"}});
-  console.log('imageDecoder.frameCount = ' + imageDecoder.frameCount);
-  console.log('imageDecoder.type = ' + imageDecoder.type);
-  console.log('imageDecoder.repetitionCount = ' + imageDecoder.repetitionCount);
+  let imageDecoder = new ImageDecoder({
+    data : imageArrayBufferChunk,
+    type : "image/jpeg",
+    options : {imageOrientation : "flipY"}
+  });
+  logMetadata(imageDecoder);
   imageDecoder.decode(imageIndex).then(
       imageFrame => canvasContext.drawImage(imageFrame.image, 0, 0));
 }
@@ -111,17 +131,95 @@ fetch("https://mjpeg_server/mjpeg_stream").then(response => {
 
 Output:
 ```Text
-imageDecoder.frameCount = 1
+Still image:
 imageDecoder.type = "image/jpeg"
+imageDecoder.complete = true
+imageDecoder.frameCount = 1
 imageDecoder.repetitionCount = 0
+imageDecoder.tracks.length = 1;
+imageDecoder.tracks[0] = {"animated":false,"id":0}
 ...
 ```
 ![Example](flipped-gif.gif)
 
+
+### Example 3: Multi-track image selection.
+```Javascript
+// This example renders the animation track of a multi-track image after
+// initially selecting the still image.
+
+let canvas = document.createElement('canvas');
+let canvasContext = canvas.getContext('2d');
+let imageDecoder = null;
+let imageIndex = 0;
+
+function decodeImage(imageByteStream) {
+  // preferAnimation=false ensures we select the still image instead of whatever
+  // the container metadata might want us to select instead.
+  imageDecoder = new ImageDecoder(
+      {data: imageByteStream, type: "image/avif", preferAnimation: false});
+
+  // This step isn't necessary, but shows how you can get metadata before any
+  // frames have been decoded.
+  imageDecoder.decodeMetadata().then(logMetadata);
+
+  // Start decoding of the first still image.
+  imageDecoder.decode(imageIndex).then(image => {
+    renderImage(image);
+    if (imageDecoder.frameCount > 1)
+      return;
+
+    // Identify the first animated track.
+    var animationTrackId = -1;
+    for (var i = 0; i < imageDecoder.tracks.length; ++i) {
+      if (imageDecoder.tracks[i].animated) {
+        animationTrackId = i;
+        break;
+      }
+    }
+
+    if (animationTrackId == -1)
+      return;
+
+    // Switch to the animation track.
+    imageDecoder.selectTrack(animationTrackId);
+    logMetadata(imageDecoder);
+
+    // Start decoding loop for the animation track.
+    imageIndex = 0;
+    imageDecoder.decode(imageIndex).then(renderImage);
+  });
+}
+
+fetch("animated_and_still.avif").then(response => decodeImage(response.body));
+```
+
+Output:
+```Text
+Still image:
+imageDecoder.type = "image/avif"
+imageDecoder.complete = true
+imageDecoder.frameCount = 1
+imageDecoder.repetitionCount = 0
+imageDecoder.tracks.length = 2;
+imageDecoder.tracks[0] = {"animated":false,"id":0}
+imageDecoder.tracks[1] = {"animated":true,"id":1}
+
+Animated image:
+imageDecoder.type = "image/avif"
+imageDecoder.complete = true
+imageDecoder.frameCount = 20
+imageDecoder.repetitionCount = 0
+imageDecoder.tracks.length = 2;
+imageDecoder.tracks[0] = {"animated":false,"id":0}
+imageDecoder.tracks[1] = {"animated":true,"id":1}
+...
+```
+![Example](test-still.png) ![Example](test-gif.gif)
+
 ## Open Questions / Notes / Links
 * image/svg support is not currently possibly in Chrome since it's bound to DOM.
 * Using a ReadableStream may over time accumulate enough data to cause OOM.
-* Should we allow mime sniffing at all? It's [discouraged](https://github.com/dalecurtis/image-decoder-api/issues/1) these days, but &lt;img&gt; has historically depended on it.
 * Is there more EXIF information that we'd want to expose?
 * Should we take a fetch() [Request](https://developer.mozilla.org/en-US/docs/Web/API/Request) object as input so that the API can allow display with tainting of image data that would be blocked by CORS?
 
@@ -170,12 +268,28 @@ typedef (ArrayBuffer or ArrayBufferView or ReadableStream) ImageBufferSource;
 dictionary ImageDecoderInit {
   required ImageBufferSource data;
 
+  // Mime type for |data|. Providing the wrong mime type will lead to a decoding
+  // failure.
+  required USVString type;
+
+  // Options to use when creating ImageBitmap objects from decoded frames. The
+  // resize width and height are additionally used to facilitate reduced
+  // resolution decoding.
+  //
   // See https://html.spec.whatwg.org/multipage/imagebitmap-and-animations.html#imagebitmapoptions
   ImageBitmapOptions options;
+
+  // For multi-track images, indicates that the animation is preferred over any
+  // still images that are present. When unspecified the decoder will use hints
+  // from the data stream to make a decision.
+  boolean preferAnimation;
 };
 
 interface ImageDecoder {
-  constructor(ImageDecoderInit init);
+  [RaisesException] constructor(ImageDecoderInit init);
+
+  // Returns true if ImageDecoder supports decoding of the given mime type.
+  static boolean canDecodeType(USVString type);
 
   // Decodes the frame at the given index. If we're still receiving data, this
   // method will wait to resolve the promise until the given |frameIndex| is
@@ -188,26 +302,46 @@ interface ImageDecoder {
   Promise<ImageFrame> decode(optional unsigned long frameIndex = 0,
                              optional boolean completeFramesOnly = true);
 
+  // Decodes only the metadata for an image; resolves the promise when metadata
+  // can be decoded. Normally this is done automatically at construction time.
+  // However when using a ReadableStream, there may not be enough data to decode
+  // metadata at the time of construction.
+  Promise<void> decodeMetadata();
+
+  // Selects another track of the image. Destructively recreates the underlying
+  // decoder. Identical track selections will be ignored. Invalid track
+  // selections will raise an exception. Clears the |preferAnimation| flag if
+  // one was provided during construction.
+  //
+  // Changing tracks will resolve all outstanding decode requests as rejected
+  // and reset any partially decoded frame state. Outstanding ImageFrames and
+  // metadata decode promises will remain valid.
+  [RaisesException] void selectTrack(unsigned long trackId);
+
   // The number of frames in the image.
   //
   // When decoding a ReadableStream the value will be 0 until enough data to
-  // decode the frame count has been received. If the format has no fixed count,
-  // the value will increase as frames are received by the decoder.
+  // decode metadata has been received. If the format has no fixed count, the
+  // value will increase as frames are received by the decoder.
   readonly attribute unsigned long frameCount;
 
-  // The detected mime type for the decoded image.
-  //
-  // When decoding a ReadableStream the value will be an empty string until
-  // enough data to detect the mime type has been received.
+  // The mime type for the decoded image. This reflects the value provided
+  // during construction.
   readonly attribute USVString type;
 
   // The image's preferred repetition count.
   //
   // When decoding a ReadableStream the value will be 0 until enough data to
-  // decode the repetition count has been received.
+  // decode metadata has been received.
   readonly attribute unsigned long repetitionCount;
 
   // True if all available frames have been received by the decoder.
   readonly attribute boolean complete;
+
+  // List of tracks available in this image.
+  //
+  // When decoding a ReadableStream the array will be empty until enough data to
+  // decode metadata has been received.
+  readonly attribute FrozenArray<ImageTrack> tracks;
 };
 ```
