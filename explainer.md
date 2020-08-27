@@ -306,6 +306,12 @@ interface ImageDecoder {
   // can be decoded. Normally this is done automatically at construction time.
   // However when using a ReadableStream, there may not be enough data to decode
   // metadata at the time of construction.
+  //
+  // Unfortunately GIFs don't really have metadata, so ReadableStream use cases
+  // may have inaccurate |frameCount| and |tracks.animated| status even after
+  // the returned promise is resolved. |frameCount| won't be accurate until
+  // |complete| is true. |tracks.animated| won't be accurate until |complete| is
+  // true or more than one frame is received.
   Promise<void> decodeMetadata();
 
   // Selects another track of the image. Destructively recreates the underlying
