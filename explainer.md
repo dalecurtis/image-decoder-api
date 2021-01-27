@@ -46,8 +46,9 @@ function renderImage(imageFrame) {
     imageIndex = 0;
 
   // Decode the next frame ahead of display so it's ready in time.
-  imageDecoder.decode(++imageIndex).then(nextImageFrame => setTimeout(
-      _ => { renderImage(nextImageFrame); }, imageFrame.duration / 1000.0));
+  imageDecoder.decode({frameIndex: ++imageIndex}).then(
+      nextImageFrame => setTimeout(_ => {
+          renderImage(nextImageFrame); }, imageFrame.duration / 1000.0));
 }
 
 function logMetadata(imageDecoder) {
@@ -70,7 +71,7 @@ function decodeImage(imageByteStream) {
   imageDecoder = new ImageDecoder(
       {data: imageByteStream, type: "image/gif", options: {}});
   logMetadata(imageDecoder);
-  imageDecoder.decode(imageIndex).then(renderImage);
+  imageDecoder.decode({frameIndex: imageIndex}).then(renderImage);
 }
 
 fetch("animated.gif").then(response => decodeImage(response.body));
@@ -105,7 +106,7 @@ function decodeImage(imageArrayBufferChunk) {
     options : {imageOrientation : "flipY"}
   });
   logMetadata(imageDecoder);
-  imageDecoder.decode(imageIndex).then(
+  imageDecoder.decode({frameIndex: imageIndex}).then(
       imageFrame => canvasContext.drawImage(imageFrame.image, 0, 0));
 }
 
@@ -164,7 +165,7 @@ function decodeImage(imageByteStream) {
   imageDecoder.decodeMetadata().then(logMetadata);
 
   // Start decoding of the first still image.
-  imageDecoder.decode(imageIndex).then(image => {
+  imageDecoder.decode({frameIndex: imageIndex}).then(image => {
     renderImage(image);
     if (imageDecoder.frameCount > 1)
       return;
@@ -187,7 +188,7 @@ function decodeImage(imageByteStream) {
 
     // Start decoding loop for the animation track.
     imageIndex = 0;
-    imageDecoder.decode(imageIndex).then(renderImage);
+    imageDecoder.decode({frameIndex: imageIndex}).then(renderImage);
   });
 }
 
@@ -285,22 +286,27 @@ dictionary ImageDecoderInit {
   boolean preferAnimation;
 };
 
+dictionary ImageDecodeOptions {
+  // The index of the frame to decode.
+  unsigned long frameIndex = 0;
+
+  // When |completeFramesOnly| is set to false, partial progressive frames will
+  // be returned. When in this mode, decode() calls will resolve only once per
+  // new partial image at |frameIndex| until the frame is complete.
+  boolean completeFramesOnly = true;
+};
+
 interface ImageDecoder {
   [RaisesException] constructor(ImageDecoderInit init);
 
   // Returns true if ImageDecoder supports decoding of the given mime type.
   static boolean canDecodeType(USVString type);
 
-  // Decodes the frame at the given index. If we're still receiving data, this
-  // method will wait to resolve the promise until the given |frameIndex| is
-  // available or reject the promise if we receive all data or fail before
-  // |frameIndex| is available.
-  //
-  // When |completeFramesOnly| is set to false, partial progressive frames will
-  // be returned. When in this mode, decode() calls will resolve only once per
-  // new partial image at |frameIndex| until the frame is complete.
-  Promise<ImageFrame> decode(optional unsigned long frameIndex = 0,
-                             optional boolean completeFramesOnly = true);
+  // Decodes a frame using the given |options| or the first frame if no options
+  // are provided. If data is still being received, the promise won't be
+  // resolved or rejected until the given |options.frameIndex| is available,
+  // all data is received, or a decoding error occurs.
+  Promise<ImageFrame> decode(optional ImageDecodeOptions options);
 
   // Decodes only the metadata for an image; resolves the promise when metadata
   // can be decoded. Normally this is done automatically at construction time.
