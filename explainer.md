@@ -322,10 +322,9 @@ interface ImageTrack {
 };
 
 interface ImageDecoder {
-  [CallWith=ScriptState, RaisesException, MeasureAs=WebCodecsImageDecoder] constructor(ImageDecoderInit init);
+  constructor(ImageDecoderInit init);
 
   // Returns true if ImageDecoder supports decoding of the given mime type.
-  [CallWith=ScriptState]
   static Promise<boolean> isTypeSupported(DOMString type);
 
   // Decodes a frame using the given |options| or the first frame if no options
